@@ -10,17 +10,24 @@ def play_game_human(page_names, page_edges):
     # ASSUMPTION: start and end were entered correctly and are reasonable
     path = [pos]
     while pos != end:
+        print('\n\ncurrent article:', id_to_name[pos])
+        print('target article:', id_to_name[end])
+        print('clicks made so far:', len(path) - 1)
         print('type a node_id to jump to the next article from the list below:')
         options = []
         for i, neighbor in enumerate(page_edges[pos]):
-            print('\t(', i+1, ') :', id_to_name[neighbor])
+            print('\t(', i+1, ')\t:', id_to_name[neighbor])
             options.append(neighbor)
         choice = int(input('next link? : '))
+        while choice <= 0 or choice > len(options):
+            choice = int(input('invalid selection, next link? : '))
         pos = options[choice-1]
         path.append(pos)
-    print(f'you finished the game in {len(path)-1} clicks!')
+    print(f'\n\nyou finished the game in {len(path)-1} clicks!')
     print('path:')
-    print(path)
+    # print(path)
+    for i, link in enumerate(path):
+        print(f'\t{i+1}.', id_to_name[link])
 
 def get_start_end(name_to_id, id_to_name):
     start = int(input('what is your starting node id? : '))
