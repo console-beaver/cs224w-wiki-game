@@ -1,3 +1,5 @@
 dataset/*
 pickles/*
 __pycache__/*
+embeddings/*
+.DS_Store
