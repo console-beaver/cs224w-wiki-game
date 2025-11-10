@@ -15,7 +15,7 @@ def fetch_dataset(n):
                 os.path.exists(f'pickles/name_to_id_top_{n}.pkl')):
             print('you have not generated this subsample of the data yet')
             print('generating pickle files (may take a few minutes)...')
-            subsample_graphs_to_pickles(n)
+            subsample_graph_to_pickles(n)
         with open(f'pickles/edge_dict_top_{n}.pkl', 'rb') as f:
             edge_dict = pickle.load(f)
         with open(f'pickles/id_to_name_top_{n}.pkl', 'rb') as f:
