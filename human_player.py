@@ -46,6 +46,8 @@ def get_start_end_name(name_to_id):
 if __name__ == '__main__':
     n = None
     if len(sys.argv) > 1:
-        n = sys.argv[1]
-    name_to_id, id_to_name, edge_dict = fetch_dataset(n)
-    play_game_human((name_to_id, id_to_name), edge_dict)
+        n = int(sys.argv[1])
+    res = fetch_dataset(n)
+    if res:  # fetching dataset did not fail
+        name_to_id, id_to_name, edge_dict = res
+        play_game_human((name_to_id, id_to_name), edge_dict)
