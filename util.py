@@ -2,7 +2,7 @@
 
 import pandas as pd
 from build_dict_parallel import build_dict_parallel
-import tqdm
+from tqdm import tqdm
 import os
 import pickle
 
@@ -15,7 +15,8 @@ def fetch_dataset(n):
                 os.path.exists(f'pickles/name_to_id_top_{n}.pkl')):
             print('you have not generated this subsample of the data yet')
             print('generating pickle files (may take a few minutes)...')
-            subsample_graphs_to_pickles(n)
+            res = subsample_graph_to_pickles(n)
+            if not res: return None
         with open(f'pickles/edge_dict_top_{n}.pkl', 'rb') as f:
             edge_dict = pickle.load(f)
         with open(f'pickles/id_to_name_top_{n}.pkl', 'rb') as f:
@@ -69,9 +70,11 @@ def load_full_dataset_from_folder(tab=0):
     edge_dict = build_dict_parallel('dataset/enwiki-2013.txt', tab=tab)
     return name_to_id, id_to_name, edge_dict
 
-def subsample_graph_to_pickles(samples):
+def subsample_graph_to_pickles(subsample_count):
     print('first, loading the full dataset:')
-    name_to_id, id_to_name, edge_dict = load_full_dataset_from_folder(tab=1)
+    res = load_full_dataset_from_folder(tab=1)
+    if not res: return False  # if loading failed, return False
+    name_to_id, id_to_name, edge_dict = res
 
     print('\tcounting undirected edge counts')
     undirected_edge_count = dict()
@@ -110,6 +113,7 @@ def subsample_graph_to_pickles(samples):
         pickle.dump(name_to_id, f)
     with open(f'pickles/id_to_name_top_{subsample_count}.pkl', 'wb') as f:
         pickle.dump(id_to_name, f)
+    return True
 
 if __name__ == '__main__':
     import sys
