@@ -1,7 +1,32 @@
-# util function with some util stuff
+#!/usr/bin/env python3
 
 import pandas as pd
 from build_dict_parallel import build_dict_parallel
+import tqdm
+import os
+import pickle
+
+def fetch_dataset(n):
+    res = None
+    if not n is None:
+        print(f'loading subsample of graph data (top {n} nodes)')
+        if not (os.path.exists(f'pickles/edge_dict_top_{n}.pkl') and
+                os.path.exists(f'pickles/id_to_name_top_{n}.pkl') and
+                os.path.exists(f'pickles/name_to_id_top_{n}.pkl')):
+            print('you have not generated this subsample of the data yet')
+            print('generating pickle files (may take a few minutes)...')
+            subsample_graphs_to_pickles(n)
+        with open(f'pickles/edge_dict_top_{n}.pkl', 'rb') as f:
+            edge_dict = pickle.load(f)
+        with open(f'pickles/id_to_name_top_{n}.pkl', 'rb') as f:
+            id_to_name = pickle.load(f)
+        with open(f'pickles/name_to_id_top_{n}.pkl', 'rb') as f:
+            name_to_id = pickle.load(f)
+        res = (name_to_id, id_to_name, edge_dict)
+    else:  # load the whole dataset
+        print('loading the whole dataset')
+        res = load_full_dataset_from_folder()
+    return res
 
 def build_dict(filepath):
     out = dict()
@@ -19,27 +44,78 @@ def build_dict(filepath):
             else: out[u].add(v)
     return out
 
-def load_full_dataset_from_folder():
+def load_full_dataset_from_folder(tab=0):
     import os
     # first verify the dataset has been downloaded
     fail = False
     if os.path.isdir('dataset'):
         if not os.path.isfile(os.path.join('dataset', 'enwiki-2013.txt')):
-            print('dataset/enwiki-2013.txt is missing, please run download_dataset.sh')
+            print('\t' * tab + 'dataset/enwiki-2013.txt is missing, please run download_dataset.sh')
             fail = True
         if not os.path.isfile(os.path.join('dataset', 'enwiki-2013-names.csv')):
-            print('dataset/enwiki-2013-names.csv is missing, please run download_dataset.sh')
+            print('\t' * tab + 'dataset/enwiki-2013-names.csv is missing, please run download_dataset.sh')
             fail = True
     else:
-        print('dataset directory is missing, please run download_dataset.sh')
+        print('\t' * tab + 'dataset directory is missing, please run download_dataset.sh')
         fail = True
     if fail: return
 
-    print('reading edge names')
+    print('\t' * tab + 'reading edge names')
     names = pd.read_csv('dataset/enwiki-2013-names.csv', comment='#', header=0, on_bad_lines='skip')
     id_to_name = pd.Series(names['name'].values, index=names['node_id']).to_dict()
     name_to_id = pd.Series(names['node_id'].values, index=names['name']).to_dict()
-    print('loading graph')
+    print('\t' * tab + 'loading graph')
     # edge_dict = build_dict('dataset/enwiki-2013.txt')
-    edge_dict = build_dict_parallel('dataset/enwiki-2013.txt')
+    edge_dict = build_dict_parallel('dataset/enwiki-2013.txt', tab=tab)
     return name_to_id, id_to_name, edge_dict
+
+def subsample_graph_to_pickles(samples):
+    print('first, loading the full dataset:')
+    name_to_id, id_to_name, edge_dict = load_full_dataset_from_folder(tab=1)
+
+    print('\tcounting undirected edge counts')
+    undirected_edge_count = dict()
+    for node_id in tqdm(edge_dict):
+        for neighbor in edge_dict[node_id]:
+            undirected_edge_count[node_id] = undirected_edge_count.get(node_id, 0) + 1
+            undirected_edge_count[neighbor] = undirected_edge_count.get(neighbor, 0) + 1
+
+    node_ids_we_care_about = set(sorted(undirected_edge_count.keys(),
+                                        reverse=True,
+                                        key=lambda x : undirected_edge_count[x]
+                                       )[:subsample_count])
+
+    print('\tpruning unneeded nodes')
+    keys = list(edge_dict.keys())
+    for node_id in tqdm(keys):
+        if node_id not in node_ids_we_care_about: del edge_dict[node_id]
+
+    print('\tpruning unneeded edges')
+    for node_id in tqdm(edge_dict):
+        edge_dict[node_id].intersection_update(node_ids_we_care_about)
+
+    print('\tupdating node names')
+    keys = list(id_to_name.keys())
+    for node_id in tqdm(keys):
+        if not node_id in node_ids_we_care_about: del id_to_name[node_id]
+    node_names_we_care_about = set(id_to_name.values())
+    keys = list(name_to_id.keys())
+    for node_name in tqdm(keys):
+        if not node_name in node_names_we_care_about: del name_to_id[node_name]
+
+    print('\tpickling files')
+    with open(f'pickles/edge_dict_top_{subsample_count}.pkl', 'wb') as f:
+        pickle.dump(edge_dict, f)
+    with open(f'pickles/name_to_id_top_{subsample_count}.pkl', 'wb') as f:
+        pickle.dump(name_to_id, f)
+    with open(f'pickles/id_to_name_top_{subsample_count}.pkl', 'wb') as f:
+        pickle.dump(id_to_name, f)
+
+if __name__ == '__main__':
+    import sys
+    argv = sys.argv
+    subsample_count = 1000
+    if len(argv) > 1:
+        subsample_count = int(argv[1])
+    print(f'subsampling {subsample_count} highest-degree nodes from full dataset...')
+    subsample_graph_to_pickles(subsample_count)

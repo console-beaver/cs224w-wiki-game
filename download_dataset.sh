@@ -15,3 +15,4 @@ echo unzipping download...
 gunzip enwiki-2013-names.csv.gz
 echo unzip finished
 cd ..
+mkdir pickles

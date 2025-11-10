@@ -50,7 +50,7 @@ def merge_dicts(dict_list):
                 out[u].update(neighbors)
     return out
 
-def build_dict_parallel(filepath):
+def build_dict_parallel(filepath, tab=0):
     file_size = os.path.getsize(filepath)
     cpu_count = mp.cpu_count()
     chunk_size = file_size // cpu_count
@@ -69,11 +69,11 @@ def build_dict_parallel(filepath):
             chunks.append((filepath, start, end, i == 0))
             start = end
 
-    print(f'\tprocessing {len(chunks)} chunks in parallel...')
+    print('\t' * (tab+1) + f'processing {len(chunks)} chunks in parallel...')
     with mp.Pool(cpu_count) as pool:
         results = pool.starmap(process_chunk, chunks)
 
-    print('\tmerging chunks...')
+    print('\t' * (tab+1) + 'merging chunks...')
     return merge_dicts(results)
 
 if __name__ == '__main__':
