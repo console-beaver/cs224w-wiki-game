@@ -3,3 +3,12 @@ pickles/*
 __pycache__/*
 embeddings/*
 .DS_Store
+
+# Python virtual environments
+venv/
+env/
+wiki_env/
+
+# Results and outputs
+baseline_results.json
+*.json
