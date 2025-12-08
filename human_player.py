@@ -13,7 +13,7 @@ def human_baseline(num_trials, page_names, page_edges):
         data[t, 0] = length
         path = play_game_human(page_names, page_edges, posend=(pos, end), say_results=True)
         print(f'\n\nyou finished the game in {len(path)-1} clicks!')
-        print(f'shortest path had length {data[t, 0]}\n\n')
+        print(f'shortest path had {data[t, 0] - 1} clicks\n\n')
         data[t, 1] = len(path)
     return data
 
