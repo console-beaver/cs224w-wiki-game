@@ -8,6 +8,7 @@ def human_baseline(num_trials, page_names, page_edges):
     name_to_id, id_to_name = page_names
     data = np.zeros((num_trials, 2), dtype=int)  # human length vs min length
     for t in range(num_trials):
+        print(f'STARTING TRIAL {t}/{num_trials}')
         pos, end, length = sample_src_dst(id_to_name, page_edges)
         data[t, 0] = length
         path = play_game_human(page_names, page_edges, posend=(pos, end), say_results=True)
