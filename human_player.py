@@ -1,12 +1,25 @@
 #!/usr/bin/env python3
 
-from util import fetch_dataset
+from util import fetch_dataset, sample_src_dst
+import numpy as np
 import sys
 
-def play_game_human(page_names, page_edges):
+def human_baseline(num_trials, page_names, page_edges):
     name_to_id, id_to_name = page_names
-    # pos, end = get_start_end_id(id_to_name)
-    pos, end = get_start_end_name(name_to_id)
+    data = np.zeros((num_trials, 2), dtype=int)  # human length vs min length
+    for t in range(num_trials):
+        pos, end, length = sample_src_dst(id_to_name, page_edges)
+        data[t, 0] = length
+        path = play_game_human(page_names, page_edges, posend=(pos, end), say_results=True)
+        print(f'\n\nyou finished the game in {len(path)-1} clicks!')
+        print(f'shortest path had length {data[t, 0]}\n\n')
+        data[t, 1] = len(path)
+    return data
+
+def play_game_human(page_names, page_edges, posend=None, say_results=True):
+    name_to_id, id_to_name = page_names
+    if posend is None: pos, end = get_start_end_name(name_to_id)
+    else: pos, end = posend
     # ASSUMPTION: start and end were entered correctly and are reasonable
     path = [pos]
     while pos != end:
@@ -23,11 +36,12 @@ def play_game_human(page_names, page_edges):
             choice = int(input('invalid selection, next link? : '))
         pos = options[choice-1]
         path.append(pos)
-    print(f'\n\nyou finished the game in {len(path)-1} clicks!')
-    print('path:')
-    # print(path)
-    for i, link in enumerate(path):
-        print(f'\t{i+1}.', id_to_name[link])
+    if say_results:
+        print(f'\n\nyou finished the game in {len(path)-1} clicks!')
+        print('path:')
+        for i, link in enumerate(path):
+            print(f'\t{i+1}.', id_to_name[link])
+    return path
 
 def get_start_end_id(id_to_name):
     start = int(input('what is your starting node id? : '))
@@ -45,9 +59,20 @@ def get_start_end_name(name_to_id):
 
 if __name__ == '__main__':
     n = None
-    if len(sys.argv) > 1:
-        n = int(sys.argv[1])
+    baseline_mode = False
+    if len(sys.argv) > 2 and sys.argv[2] == 'b': baseline_mode = True
+    if len(sys.argv) > 1: n = int(sys.argv[1])
     res = fetch_dataset(n)
-    if res:  # fetching dataset did not fail
-        name_to_id, id_to_name, edge_dict = res
-        play_game_human((name_to_id, id_to_name), edge_dict)
+    if not res: exit()  # exit if dataset fetching fails
+    name_to_id, id_to_name, edge_dict = res
+    if not baseline_mode: play_game_human((name_to_id, id_to_name), edge_dict)
+    else:  # run some number of trials to test human!
+        import os.path
+        if os.path.exists('mytestresults.npy'):
+            print('mytestresults.npy already exists in this directory! please delete or rename it')
+            exit()
+        num_trials = 20
+        res = human_baseline(num_trials, (name_to_id, id_to_name), edge_dict)
+        print('good work human!')
+        print('saving human test results to mytestresults.npy')
+        np.save('mytestresults.npy', res)

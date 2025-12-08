@@ -9,30 +9,7 @@ Usage: python baseline.py
 import random
 import pickle
 import os
-from collections import deque
-from util import load_full_dataset_from_folder
-
-
-def bfs(edge_dict, start, target):
-    """Find shortest path using BFS. Returns path as list of node IDs."""
-    if start == target:
-        return [start]
-
-    queue = deque([(start, [start])])
-    visited = {start}
-
-    while queue:
-        current, path = queue.popleft()
-
-        for neighbor in edge_dict.get(current, set()):
-            if neighbor == target:
-                return path + [neighbor]
-
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append((neighbor, path + [neighbor]))
-
-    return None  # No path found
+from util import load_full_dataset_from_folder, bfs
 
 
 def test_random_path():

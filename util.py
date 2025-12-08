@@ -2,9 +2,33 @@
 
 import pandas as pd
 from build_dict_parallel import build_dict_parallel
+from collections import deque
 from tqdm import tqdm
 import os
 import pickle
+import random
+
+
+def bfs(edge_dict, start, target):
+    """Find shortest path using BFS. Returns path as list of node IDs."""
+    if start == target:
+        return [start]
+
+    queue = deque([(start, [start])])
+    visited = {start}
+
+    while queue:
+        current, path = queue.popleft()
+
+        for neighbor in edge_dict.get(current, set()):
+            if neighbor == target:
+                return path + [neighbor]
+
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, path + [neighbor]))
+
+    return None  # No path found
 
 def fetch_dataset(n):
     res = None
@@ -114,6 +138,12 @@ def subsample_graph_to_pickles(subsample_count):
     with open(f'pickles/id_to_name_top_{subsample_count}.pkl', 'wb') as f:
         pickle.dump(id_to_name, f)
     return True
+
+def sample_src_dst(id_to_name, edge_dict):
+    while True:  # repeat until we find a valid src -> dst
+        src, dst = random.sample(list(id_to_name.keys()), 2)
+        path = bfs(edge_dict, src, dst)
+        if path is not None: return src, dst, len(path)
 
 if __name__ == '__main__':
     import sys
