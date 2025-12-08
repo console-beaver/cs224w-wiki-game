@@ -2,6 +2,7 @@ dataset/*
 pickles/*
 **/__pycache__/
 embeddings/*
+checkpoints/*
 .DS_Store
 
 # Python virtual environments

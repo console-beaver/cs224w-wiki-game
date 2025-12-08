@@ -2,3 +2,5 @@ pandas
 tqdm
 node2vec
 matplotlib
+torch
+numpy
