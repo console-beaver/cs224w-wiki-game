@@ -10,8 +10,7 @@ def human_baseline(num_trials, page_names, page_edges):
     data = []
     for t in range(num_trials):
         print(f'STARTING TRIAL {t+1}/{num_trials}')
-        random.seed(12736712376 + t)  # magic number for consistency
-        pos, end, length = sample_src_dst(id_to_name, page_edges)
+        pos, end, length = sample_src_dst(id_to_name, page_edges, seed=12736712376 + t)
         path = play_game_human(page_names, page_edges, posend=(pos, end), say_results=True)
         print(f'\n\nyou finished the game in {len(path)-1} clicks!')
         print(f'shortest path had {length - 1} clicks\n\n')
