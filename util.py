@@ -139,7 +139,8 @@ def subsample_graph_to_pickles(subsample_count):
         pickle.dump(id_to_name, f)
     return True
 
-def sample_src_dst(id_to_name, edge_dict):
+def sample_src_dst(id_to_name, edge_dict, seed=None):
+    if seed is not None: random.seed(seed)
     while True:  # repeat until we find a valid src -> dst
         src, dst = random.sample(list(id_to_name.keys()), 2)
         path = bfs(edge_dict, src, dst)
