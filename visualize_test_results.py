@@ -6,31 +6,43 @@ import networkx as nx
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 import sys
+from pathlib import Path
 
-FILENAMES = (
-                'testresults_michael.pkl',
-                'testresults_cary.pkl'
-            )
+
 NUM_PROMPTS = 20
+SHOW_GRAY_EDGES = False
 
 # WARNING: ASSUMES THAT ALL FILES ABOVE HAD THE SAME NUMBER OF NODES AND THE
 # SAME NUMBER OF TRIALS, if it doesn't then something will break
 
 if __name__ == '__main__':
     print('fetching dataset...')
+
     n = 1000
     if len(sys.argv) > 1: n = int(sys.argv[1])
     res = fetch_dataset(n)
     if not res: exit()  # exit if dataset fetching fails
     name_to_id, id_to_name, edge_dict = res
+
     print('fetched dataset')
     print('loading human baseline pickles...')
+
+    paths_dir = Path('players_to_visualize')
+    if not paths_dir.exists() or not paths_dir.is_dir():
+        print('players_to_visualize directory not found')
+        exit()
+    FILENAMES = [f.name for f in paths_dir.iterdir() if f.is_file() and f.suffix == '.pkl']
+    if len(FILENAMES) == 0:
+        print('no pkls found in players_to_visualize')
+        exit()
     pkls = []
     for name in FILENAMES:
         with open('players_to_visualize/' + name, 'rb') as f:
             pkls.append(pickle.load(f))
+
     print('pickles loaded')
     print('visualizing paths...')
+
     player_colors = ['salmon', 'turquoise', 'green', 'olive', 'gold', 'orange', 'blue', 'indigo'][:len(FILENAMES)]
     for prompt in range(NUM_PROMPTS):
         # create the subgraph
@@ -47,7 +59,8 @@ if __name__ == '__main__':
             color = 'black'
             for player, prompts in enumerate(pkls):
                 path = prompts[prompt][1]
-                if u in path and v in path and path.index(u) + 1 == path.index(v):
+                # if u in path and v in path and path.index(u) + 1 == path.index(v):
+                if (u, v) in [(path[i], path[i+1]) for i in range(len(path) - 1)]:
                     if color == 'black': color = player_colors[player]  # one occurance
                     else: color = 'magenta'  # multiple occurances
             edge_colors.append(color)
@@ -85,13 +98,14 @@ if __name__ == '__main__':
                                width=[edge_widths[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] != 'black']
                               )
 
-        nx.draw_networkx_edges(subgraph,
-                               pos,
-                               edgelist=[e for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
-                               edge_color=[edge_colors[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
-                               style=[edge_styles[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
-                               width=[edge_widths[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black']
-                              )
+        if SHOW_GRAY_EDGES:
+            nx.draw_networkx_edges(subgraph,
+                                   pos,
+                                   edgelist=[e for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
+                                   edge_color=[edge_colors[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
+                                   style=[edge_styles[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
+                                   width=[edge_widths[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black']
+                                  )
 
         nx.draw_networkx_nodes(subgraph, pos, node_color=node_colors)
 
