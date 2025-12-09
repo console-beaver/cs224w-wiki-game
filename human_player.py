@@ -3,18 +3,19 @@
 from util import fetch_dataset, sample_src_dst
 import numpy as np
 import sys
+import random
 
 def human_baseline(num_trials, page_names, page_edges):
     name_to_id, id_to_name = page_names
-    data = np.zeros((num_trials, 2), dtype=int)  # human length vs min length
+    data = []
     for t in range(num_trials):
         print(f'STARTING TRIAL {t+1}/{num_trials}')
+        random.seed(12736712376 + t)  # magic number for consistency
         pos, end, length = sample_src_dst(id_to_name, page_edges)
-        data[t, 0] = length
         path = play_game_human(page_names, page_edges, posend=(pos, end), say_results=True)
         print(f'\n\nyou finished the game in {len(path)-1} clicks!')
-        print(f'shortest path had {data[t, 0] - 1} clicks\n\n')
-        data[t, 1] = len(path)
+        print(f'shortest path had {length - 1} clicks\n\n')
+        data.append((length, path))
     return data
 
 def play_game_human(page_names, page_edges, posend=None, say_results=True):
@@ -69,11 +70,13 @@ if __name__ == '__main__':
     if not baseline_mode: play_game_human((name_to_id, id_to_name), edge_dict)
     else:  # run some number of trials to test human!
         import os.path
-        if os.path.exists('mytestresults.npy'):
-            print('mytestresults.npy already exists in this directory! please delete or rename it')
+        if os.path.exists('mytestresults.pkl'):
+            print('mytestresults.pkl already exists in this directory! please delete or rename it')
             exit()
         num_trials = 20
         res = human_baseline(num_trials, (name_to_id, id_to_name), edge_dict)
         print('good work human!')
-        print('saving human test results to mytestresults.npy')
-        np.save('mytestresults.npy', res)
+        print('saving human test results to mytestresults.pkl')
+        import pickle
+        with open('mytestresults.pkl', 'wb') as f:
+            pickle.dump(res, f)
