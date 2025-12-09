@@ -33,9 +33,13 @@ def play_game_human(page_names, page_edges, posend=None, say_results=True):
         for i, neighbor in enumerate(sorted(page_edges[pos], key = lambda x : id_to_name[x])):
             print('\t(', i+1, ')\t:', id_to_name[neighbor])
             options.append(neighbor)
-        choice = int(input('next link? : '))
+        choice = input('next link? : ')
+        try: choice = int(choice)
+        except: choice = -1  # guaranteed fail
         while choice <= 0 or choice > len(options):
-            choice = int(input('invalid selection, next link? : '))
+            choice = input('invalid selection, next link? : ')
+            try: choice = int(choice)
+            except: choice = -1  # guaranteed fail
         pos = options[choice-1]
         path.append(pos)
     if say_results:
