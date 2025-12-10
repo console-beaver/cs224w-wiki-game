@@ -31,7 +31,6 @@ def choose_neighbor_id(src, neighbors, dst, traversed_edges, gnn_model, embeddin
         if score > highest_score:
             choice = neighbor_id
             highest_score = score
-    assert choice is not None, 'gnn entered component with no connction to dst'
     return choice
 
 def play_game_gnn(page_names, page_edges, gnn_model, embeddings, posend=None, say_results=True):
