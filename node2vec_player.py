@@ -11,7 +11,6 @@ the topmost choice.
 from util import fetch_dataset, sample_src_dst
 import numpy as np
 import sys
-import random
 import os.path
 from gensim.models import KeyedVectors
 
