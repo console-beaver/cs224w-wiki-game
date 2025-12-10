@@ -3,7 +3,6 @@
 from util import fetch_dataset, sample_src_dst
 import numpy as np
 import sys
-import random
 
 def human_baseline(num_trials, page_names, page_edges):
     name_to_id, id_to_name = page_names
