@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 NUM_PROMPTS = 20
-SHOW_GRAY_EDGES = False
+SHOW_GRAY_EDGES = True
 
 # WARNING: ASSUMES THAT ALL FILES ABOVE HAD THE SAME NUMBER OF NODES AND THE
 # SAME NUMBER OF TRIALS, if it doesn't then something will break
@@ -88,23 +88,72 @@ if __name__ == '__main__':
 
         labels = { node_id : id_to_name[node_id] for node_id in subgraph.nodes() }
 
+        # often, the graph of paths is planar, and planar graphs are legible
+        temp_subgraph = nx.DiGraph()
+        temp_subgraph.add_nodes_from(subgraph.nodes())
+        colored_edges_list = [e for i, e in enumerate(subgraph.edges()) if edge_colors[i] != 'black']
+        temp_subgraph.add_edges_from(colored_edges_list)
+        try:
+            pos = nx.planar_layout(temp_subgraph)
+            pos = nx.kamada_kawai_layout(subgraph, pos=pos)
+            # pos = nx.spring_layout(temp_subgraph, pos=pos, iterations=1, k = 2 / (len(temp_subgraph.nodes()))**0.5)
+        except:
+            pos = nx.kamada_kawai_layout(subgraph)
+        del temp_subgraph
+
+        # draw bi-directional edges with arcs, first find the bidirectional edges
+        all_edges = list(subgraph.edges())
+        edge_color_map = { e : edge_colors[i] for i, e in enumerate(all_edges) }
+        bidirectional_edges = set()
+        for i, (u, v) in enumerate(all_edges):
+            if subgraph.has_edge(v, u) and (SHOW_GRAY_EDGES or edge_color_map[(v, u)] != 'black'):
+                bidirectional_edges.add((u, v))
+        straight_indices_black = []
+        curved_indices_black = []
+        straight_indices_colored = []
+        curved_indices_colored = []
+        for i, e in enumerate(all_edges):
+            if edge_colors[i] == 'black':
+                if e in bidirectional_edges: curved_indices_black.append(i)
+                else: straight_indices_black.append(i)
+            else:
+                if e in bidirectional_edges: curved_indices_colored.append(i)
+                else: straight_indices_colored.append(i)
+
         # draw colored edges first, then gray after
-        pos = nx.spring_layout(subgraph)
         nx.draw_networkx_edges(subgraph,
                                pos,
-                               edgelist=[e for i, e in enumerate(subgraph.edges()) if edge_colors[i] != 'black'],
-                               edge_color=[edge_colors[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] != 'black'],
-                               style=[edge_styles[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] != 'black'],
-                               width=[edge_widths[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] != 'black']
+                               edgelist=[all_edges[i] for i in straight_indices_colored],
+                               edge_color=[edge_colors[i] for i in straight_indices_colored],
+                               style=[edge_styles[i] for i in straight_indices_colored],
+                               width=[edge_widths[i] for i in straight_indices_colored]
+                              )
+
+        nx.draw_networkx_edges(subgraph,
+                               pos,
+                               edgelist=[all_edges[i] for i in curved_indices_colored],
+                               edge_color=[edge_colors[i] for i in curved_indices_colored],
+                               style=[edge_styles[i] for i in curved_indices_colored],
+                               width=[edge_widths[i] for i in curved_indices_colored],
+                               connectionstyle='arc3,rad=0.1'
                               )
 
         if SHOW_GRAY_EDGES:
             nx.draw_networkx_edges(subgraph,
                                    pos,
-                                   edgelist=[e for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
-                                   edge_color=[edge_colors[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
-                                   style=[edge_styles[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black'],
-                                   width=[edge_widths[i] for i, e in enumerate(subgraph.edges()) if edge_colors[i] == 'black']
+                                   edgelist=[all_edges[i] for i in straight_indices_black],
+                                   edge_color=[edge_colors[i] for i in straight_indices_black],
+                                   style=[edge_styles[i] for i in straight_indices_black],
+                                   width=[edge_widths[i] for i in straight_indices_black]
+                                  )
+
+            nx.draw_networkx_edges(subgraph,
+                                   pos,
+                                   edgelist=[all_edges[i] for i in curved_indices_black],
+                                   edge_color=[edge_colors[i] for i in curved_indices_black],
+                                   style=[edge_styles[i] for i in curved_indices_black],
+                                   width=[edge_widths[i] for i in curved_indices_black],
+                                   connectionstyle='arc3,rad=0.1'
                                   )
 
         nx.draw_networkx_nodes(subgraph, pos, node_color=node_colors)
