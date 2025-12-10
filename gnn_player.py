@@ -22,15 +22,20 @@ def choose_neighbor_id(src, neighbors, dst, traversed_edges, gnn_model, embeddin
     # from the set of neighbor node ids, select edge to traverse
     # which has highest score, avoid repeat traversals of edges (cycle)
     choice = None
+    traversed_choice = None
     highest_score = -1e9
+    traversed_score = -1e9
     dst_embed = embeddings[str(dst)]
     for neighbor_id in neighbors:
-        if (src, neighbor_id) in traversed_edges: continue
         neighbor_embed = embeddings[str(neighbor_id)]
         score = ... # TODO: something like gnn_model(neighbor_embed, dst_embed)
-        if score > highest_score:
+        if (src, neighbor_id) in traversed_edges and score > traversed_score:
+            choice = neighbor_id
+            traversed_score = score
+        elif score > highest_score:
             choice = neighbor_id
             highest_score = score
+    if choice is None: return traversed_choice
     return choice
 
 def play_game_gnn(page_names, page_edges, gnn_model, embeddings, posend=None, say_results=True):
@@ -41,6 +46,7 @@ def play_game_gnn(page_names, page_edges, gnn_model, embeddings, posend=None, sa
     traversed_edges = set()
     while pos != end:
         pos = choose_neighbor_id(list(page_edges[pos]), end, traversed_edges, gnn_model, embeddings)
+        assert pos is not None, 'gnn agent entered a dead end'
         traversed_edges.add((path[-1], pos))
         path.append(pos)
     if say_results:
