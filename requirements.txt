@@ -4,3 +4,5 @@ node2vec
 matplotlib
 torch
 numpy
+gensim
+node2vec
