@@ -79,7 +79,7 @@ if __name__ == '__main__':
         exit()
     num_trials = 20
     res = node2vec_baseline(num_trials, (name_to_id, id_to_name), edge_dict)
-    print('saving human test results to mytestresults.pkl')
+    print('saving human test results to node2vecresults.pkl')
     import pickle
-    with open('mytestresults.pkl', 'wb') as f:
+    with open('node2vecresults.pkl', 'wb') as f:
         pickle.dump(res, f)
