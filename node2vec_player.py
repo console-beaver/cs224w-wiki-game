@@ -14,8 +14,6 @@ import sys
 import os.path
 from gensim.models import KeyedVectors
 
-
-
 def node2vec_baseline(num_trials, page_names, page_edges):
     _, id_to_name = page_names
     embeddings = KeyedVectors.load_word2vec_format('embeddings/node_embeddings_1000.kv')
@@ -67,16 +65,30 @@ def play_game_node2vec(page_names, page_edges, embeddings, posend=None, say_resu
     return path
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
+        print("Usage: python3 node2vec_player.py [num_nodes] [num_trials]")
+        print("  num_nodes: size of the node subsample (default: None for full dataset)")
+        print("  num_trials: number of trials to run (default: 20)")
+        exit()
+    
     n = None
-    baseline_mode = True
-    if len(sys.argv) > 1: n = int(sys.argv[1])
+    num_trials = 20
+    try:
+        if len(sys.argv) > 1: n = int(sys.argv[1])
+        if len(sys.argv) > 2: num_trials = int(sys.argv[2])
+    except ValueError:
+        print("Error: num_nodes and num_trials must be integers")
+        print("Usage: python3 node2vec_player.py [num_nodes] [num_trials]")
+        print("  num_nodes: size of the node subsample (default: None for full dataset)")
+        print("  num_trials: number of trials to run (default: 20)")
+        exit()
+    
     res = fetch_dataset(n)
     if not res: exit()  # exit if dataset fetching fails
     name_to_id, id_to_name, edge_dict = res
     if os.path.exists('node2vecresults.pkl'):
         print('node2vecresults.pkl already exists in this directory! please delete or rename it')
         exit()
-    num_trials = 20
     res = node2vec_baseline(num_trials, (name_to_id, id_to_name), edge_dict)
     print('saving human test results to node2vecresults.pkl')
     import pickle
