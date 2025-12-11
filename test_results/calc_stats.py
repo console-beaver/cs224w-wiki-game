@@ -1,13 +1,11 @@
-import os
+"""
+This script loops through each .pkl in this directory and prints out their mean # of nodes touched when going from
+start to target, their std. deviation, and the max. It also
+"""
+
 import pickle
 import numpy as np
 from pathlib import Path
-
-"""
-This script loops through each .pkl in this directory and prints out their mean # of nodes touched when going from
-start to target, their std. deviation, and the max.
-"""
-
 
 def analyze_pkl_files(directory="."):
     """Analyze all .pkl files in the directory."""
@@ -30,6 +28,8 @@ def analyze_pkl_files(directory="."):
                 continue
             
             if nodes_touched:
+                # To get shortest path statistics, we just print out the shortest path for each
+                # .pkl file
                 ideal_path = np.array(ideal_path)
                 mean = np.mean(ideal_path)
                 std = np.std(ideal_path)
@@ -40,6 +40,7 @@ def analyze_pkl_files(directory="."):
                 print(f"  Max: {max_val}")
                 print()
 
+                # Calculate stats for the given .pkl file
                 nodes_touched = np.array(nodes_touched)
                 mean = np.mean(nodes_touched)
                 std = np.std(nodes_touched)
