@@ -155,13 +155,16 @@ if __name__ == '__main__':
     baseline_mode = False
     checkpoint_path = 'checkpoints/best_model.pt'
 
-    # Parse arguments: python gnn_player.py [n] [b] [checkpoint_path]
+    # Parse arguments: python gnn_player.py [n] [b] [checkpoint_path] [num_trials]
     if len(sys.argv) > 2 and sys.argv[2] == 'b':
         baseline_mode = True
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
     if len(sys.argv) > 3:
         checkpoint_path = sys.argv[3]
+    num_trials = 20
+    if len(sys.argv) > 4:
+        num_trials = int(sys.argv[4])
 
     # Load dataset
     res = fetch_dataset(n)
@@ -200,7 +203,6 @@ if __name__ == '__main__':
         if os.path.exists('mytestresults.pkl'):
             print('mytestresults.pkl already exists in this directory! please delete or rename it')
             exit()
-        num_trials = 20
         res = gnn_baseline(num_trials, (name_to_id, id_to_name), edge_dict,
                           gnn_model, id_to_idx, device)
         print('good work robot!')
