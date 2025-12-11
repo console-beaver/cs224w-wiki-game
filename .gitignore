@@ -11,5 +11,4 @@ env/
 wiki_env/
 
 # Results and outputs
-baseline_results.json
-*.json
+*.pt

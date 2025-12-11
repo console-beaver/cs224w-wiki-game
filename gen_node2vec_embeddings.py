@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+Script that takes the Wikipedia sub-graph specified by the first argument, and runs Node2Vec on it
+to generate embeddings in the 'embeddings' folder. These embeddings are then used by node2vec_player.py
+to simulte Wikiracing games.
+
+Usage: python3 ./gen_node2vec_embeddings.py <top K nodes from wikipedia graph>
+"""
+
 import sys
 from node2vec import Node2Vec
 from util import fetch_dataset
@@ -27,7 +35,7 @@ def main():
             return
         n = int(sys.argv[1])
     res = fetch_dataset(n)
-    if not res:  # fetching dataset did not fail
+    if not res:  # fetching dataset fails
         print("Dataset Fetching Failed.")
         return
     if not os.path.isdir('embeddings'):
@@ -35,10 +43,9 @@ def main():
         return
     _, id_to_name, edge_dict = res
     g = pickleToGraph(id_to_name, edge_dict)
+    # Run node2Vec and save results
     node2vec = Node2Vec(g, dimensions=64, walk_length=30, num_walks=200, workers=8)
     model = node2vec.fit(window=10, min_count=1, batch_words=4)
-    
-        
     model.wv.save_word2vec_format(f"embeddings/node_embeddings_{n}.kv")
 
 if __name__ == "__main__":

@@ -76,6 +76,6 @@ if __name__ == '__main__':
     res = fetch_dataset(n)
     if not res: exit()
     name_to_id, id_to_name, edge_dict = res
-    counts = bfs_baseline(200, (name_to_id, id_to_name), edge_dict)
+    counts = bfs_baseline(20, (name_to_id, id_to_name), edge_dict)
     counts = np.asarray(counts)
     print(f'mean: {np.mean(counts)}, max: {np.max(counts)}, std: {np.std(counts)}')
