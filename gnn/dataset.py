@@ -137,9 +137,14 @@ def generate_samples_from_pair(edge_dict, reverse_graph, source, target, max_pat
     return samples
 
 
-def generate_training_data(edge_dict, num_pairs=1000, max_path_len=10, seed=42):
+def generate_training_data(edge_dict, num_pairs=1000, max_path_len=10, seed=42,
+                           min_samples_per_target=3):
     """
-    Generate training data from random source-target pairs.
+    Generate training data ensuring all nodes appear as targets.
+
+    Strategy:
+    1. First, ensure every node appears as a target at least min_samples_per_target times
+    2. Then, fill remaining pairs randomly
 
     Returns:
         all_samples: list of all training samples
@@ -162,15 +167,20 @@ def generate_training_data(edge_dict, num_pairs=1000, max_path_len=10, seed=42):
 
     all_samples = []
     pair_indices = []  # Track which samples belong to which pair
+    target_counts = {t: 0 for t in target_candidates}  # Track samples per target
 
-    print(f"Generating samples from {num_pairs} random pairs...")
+    # Phase 1: Ensure all nodes appear as targets at least min_samples_per_target times
+    print(f"Phase 1: Ensuring all {len(target_candidates)} nodes appear as targets (min {min_samples_per_target}x each)...")
+
+    uncovered_targets = set(target_candidates)
     pairs_tried = 0
     pairs_successful = 0
 
-    pbar = tqdm(total=num_pairs)
-    while pairs_successful < num_pairs and pairs_tried < num_pairs * 10:
+    pbar = tqdm(total=len(target_candidates), desc="Covering targets")
+    while uncovered_targets and pairs_tried < len(target_candidates) * 50:
+        # Pick an uncovered target
+        target = random.choice(list(uncovered_targets))
         source = random.choice(source_candidates)
-        target = random.choice(target_candidates)
 
         if source == target:
             pairs_tried += 1
@@ -188,11 +198,59 @@ def generate_training_data(edge_dict, num_pairs=1000, max_path_len=10, seed=42):
             end_idx = len(all_samples)
             pair_indices.append((start_idx, end_idx))
             pairs_successful += 1
-            pbar.update(1)
+
+            target_counts[target] += 1
+            if target_counts[target] >= min_samples_per_target:
+                uncovered_targets.discard(target)
+                pbar.update(1)
 
     pbar.close()
-    print(f"Generated {len(all_samples)} samples from {pairs_successful} pairs")
-    print(f"  (tried {pairs_tried} pairs, {pairs_tried - pairs_successful} had no path)")
+    print(f"  Phase 1: {pairs_successful} pairs, {len(uncovered_targets)} targets still uncovered")
+
+    if uncovered_targets:
+        print(f"  Warning: Could not reach {len(uncovered_targets)} targets from any source")
+
+    # Phase 2: Generate additional random pairs up to num_pairs
+    remaining_pairs = num_pairs - pairs_successful
+    if remaining_pairs > 0:
+        print(f"Phase 2: Generating {remaining_pairs} additional random pairs...")
+
+        pbar = tqdm(total=remaining_pairs, desc="Random pairs")
+        phase2_tried = 0
+        phase2_successful = 0
+
+        while phase2_successful < remaining_pairs and phase2_tried < remaining_pairs * 10:
+            source = random.choice(source_candidates)
+            target = random.choice(target_candidates)
+
+            if source == target:
+                phase2_tried += 1
+                continue
+
+            samples = generate_samples_from_pair(
+                edge_dict, reverse_graph, source, target, max_path_len
+            )
+
+            phase2_tried += 1
+
+            if samples:
+                start_idx = len(all_samples)
+                all_samples.extend(samples)
+                end_idx = len(all_samples)
+                pair_indices.append((start_idx, end_idx))
+                phase2_successful += 1
+                target_counts[target] += 1
+                pbar.update(1)
+
+        pbar.close()
+        pairs_successful += phase2_successful
+
+    # Print coverage stats
+    covered = sum(1 for c in target_counts.values() if c > 0)
+    print(f"\nGenerated {len(all_samples)} samples from {pairs_successful} pairs")
+    print(f"Target coverage: {covered}/{len(target_candidates)} nodes ({100*covered/len(target_candidates):.1f}%)")
+    print(f"Min samples per covered target: {min(c for c in target_counts.values() if c > 0)}")
+    print(f"Max samples per target: {max(target_counts.values())}")
 
     return all_samples, pair_indices
 
@@ -241,6 +299,8 @@ def main():
                         help='Random seed for reproducibility')
     parser.add_argument('--output-dir', type=str, default='training_data',
                         help='Output directory for pickle files')
+    parser.add_argument('--min-per-target', type=int, default=3,
+                        help='Minimum samples per target node for coverage')
     args = parser.parse_args()
 
     # Load graph
@@ -256,7 +316,8 @@ def main():
         edge_dict,
         num_pairs=args.num_pairs,
         max_path_len=args.max_path_len,
-        seed=args.seed
+        seed=args.seed,
+        min_samples_per_target=args.min_per_target
     )
 
     if not all_samples:
