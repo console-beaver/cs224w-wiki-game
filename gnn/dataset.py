@@ -249,8 +249,9 @@ def generate_training_data(edge_dict, num_pairs=1000, max_path_len=10, seed=42,
     covered = sum(1 for c in target_counts.values() if c > 0)
     print(f"\nGenerated {len(all_samples)} samples from {pairs_successful} pairs")
     print(f"Target coverage: {covered}/{len(target_candidates)} nodes ({100*covered/len(target_candidates):.1f}%)")
-    print(f"Min samples per covered target: {min(c for c in target_counts.values() if c > 0)}")
-    print(f"Max samples per target: {max(target_counts.values())}")
+    if covered > 0:
+        print(f"Min samples per covered target: {min(c for c in target_counts.values() if c > 0)}")
+        print(f"Max samples per target: {max(target_counts.values())}")
 
     return all_samples, pair_indices
 

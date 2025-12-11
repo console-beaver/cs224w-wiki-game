@@ -49,7 +49,6 @@ def gnn_baseline(num_trials, page_names, page_edges, gnn_model, id_to_idx, devic
         pos, end, length = sample_src_dst(id_to_name, page_edges, seed=12736712376 + t)
         path = play_game_gnn(page_names, page_edges, gnn_model, id_to_idx, device,
                             posend=(pos, end), say_results=True, max_neighbors=max_neighbors)
-        print(f'\n\nGNN finished the game in {len(path)-1} clicks!')
         print(f'shortest path had {length - 1} clicks\n\n')
         data.append((length, path))
     return data
@@ -156,11 +155,13 @@ if __name__ == '__main__':
     baseline_mode = False
     checkpoint_path = 'checkpoints/best_model.pt'
 
-    # Parse arguments
+    # Parse arguments: python gnn_player.py [n] [b] [checkpoint_path]
     if len(sys.argv) > 2 and sys.argv[2] == 'b':
         baseline_mode = True
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
+    if len(sys.argv) > 3:
+        checkpoint_path = sys.argv[3]
 
     # Load dataset
     res = fetch_dataset(n)
