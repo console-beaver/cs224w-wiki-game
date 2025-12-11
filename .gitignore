@@ -2,7 +2,6 @@ dataset/*
 pickles/*
 **/__pycache__/
 embeddings/*
-checkpoints/*
 .DS_Store
 
 # Python virtual environments
@@ -11,5 +10,4 @@ env/
 wiki_env/
 
 # Results and outputs
-baseline_results.json
-*.json
+*.pt
