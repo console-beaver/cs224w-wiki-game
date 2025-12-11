@@ -9,7 +9,8 @@ Usage: python baseline.py
 import random
 import pickle
 import os
-from util import load_full_dataset_from_folder, bfs
+from util import load_full_dataset_from_folder, bfs, fetch_dataset, sample_src_dst
+import sys
 
 
 def test_random_path():
@@ -53,6 +54,24 @@ def test_random_path():
     else:
         print("No path found (disconnected)")
 
+def bfs_baseline(num_trials, page_names, page_edges):
+    name_to_id, id_to_name = page_names
+    for t in range(num_trials):
+        pos, end, length = sample_src_dst(id_to_name, page_edges, seed=12736712376 + t)
+        num_visited = record_num_visits_bfs(page_edges, (pos, end))
+        print(f'shortest: {length}, visited: {num_visited}, {id_to_name[pos]} -> {id_to_name[end]}')
+    return None
+
+def record_num_visits_bfs(edge_dict, posend):
+    pos, end = posend
+    _, num_visited = bfs(edge_dict, pos, end, return_visited=True)
+    return num_visited
 
 if __name__ == '__main__':
-    test_random_path()
+    n = 1000
+    if len(sys.argv) > 1: n = int(sys.argv[1])
+    res = fetch_dataset(n)
+    if not res: exit()
+    name_to_id, id_to_name, edge_dict = res
+    bfs_baseline(20, (name_to_id, id_to_name), edge_dict)
+

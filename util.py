@@ -9,7 +9,7 @@ import pickle
 import random
 
 
-def bfs(edge_dict, start, target):
+def bfs(edge_dict, start, target, return_visited=False):
     """Find shortest path using BFS. Returns path as list of node IDs."""
     if start == target:
         return [start]
@@ -22,7 +22,8 @@ def bfs(edge_dict, start, target):
 
         for neighbor in edge_dict.get(current, set()):
             if neighbor == target:
-                return path + [neighbor]
+                if return_visited: return path + [neighbor], len(visited) + 1
+                else: return path + [neighbor]
 
             if neighbor not in visited:
                 visited.add(neighbor)
