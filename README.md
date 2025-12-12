@@ -4,11 +4,17 @@ Project for cs224w, GNN for wiki game.
 Authors: Michael Rybalkin, Cary Xiao, Noah Islam
 
 ## Dataset
-This project uses the dataset [TODO] found here: https://snap.stanford.edu/data/enwiki-2013.html. Download the dataset using `download_dataset.sh`
+This project uses the English Wikipedia hyperlink network dataset found here: https://snap.stanford.edu/data/enwiki-2013.html. Download the dataset using `download_dataset.sh`
 
 ## Setup
 - `pip install -r requirements.txt`
 - `./download_dataset.sh`
+
+## Usage Instructions
+- If you would like to play the wiki game for yourself on the `n=1000` subset of the wikipedia dataset, run `./human_player 1000`. The first time you do this, the subsampled graph needs to be generated, and this process takes a few minutes. Afterwards, it will be cached. Before playing, you must provide the names of the starting and ending articles to play with. Run `./node_names.py 1000` to get a list of all the valid node names to use here. If you don't want to choose the start and end node, run with baseline mode using `./human_player 1000 b` to play 20 games with randomly-selected (seeded) start and end nodes.
+- If you would like to run the node2vec agent and see it play the wiki game, you first need to generate node2vec embeddings. Run `./gen_node2vec_embeddings.py 1000`. Now, to simulate 20 trials of the wiki game with the simple node2vec agent (picking the neighbor who's embedding has the highest cosine similarity with the target embedding) run `./node2vec_player.py 1000 20`.
+- If you would like to run one of the GNN-based approaches (MLP or GraphSAGE), you must first generate the node2vec embeddings (if you have not already done so). from here, TODO! (does the user need to train them locally, or have weights been comitted to the repo? If there are already commited weights, how can the user train new ones?)
+- If you would like to compare the paths taken by different agents in the wiki game, you can use the script `./visualize_test_results.py`. When running a player script in baseline mode, a file is produced which contains the paths taken by the player. All of these files which are placed in the directory `players_to_visualize` will be rendered by the visualization script. Each approach will have a unique color, and if multiple approaches traverse the same nodes/edges, they will be purple. If the graphs are too cluttered, try removing some of the files from `players_to_visualize`.
 
 ## Scripts
 - `download_dataset.sh`: Downloads the dataset, sets up the repo directory for the other scripts.
