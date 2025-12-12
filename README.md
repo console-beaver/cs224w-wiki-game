@@ -4,7 +4,7 @@ Project for cs224w, GNN for wiki game.
 Authors: Michael Rybalkin, Cary Xiao, Noah Islam
 
 ## Dataset
-This project uses the English Wikipedia hyperlink network dataset found here: https://snap.stanford.edu/data/enwiki-2013.html. Download the dataset using `download_dataset.sh`
+This project uses the English Wikipedia hyperlink network dataset found here: https://snap.stanford.edu/data/enwiki-2013.html. Download the dataset using `download_dataset.sh`.
 
 ## Setup
 - `pip install -r requirements.txt`
@@ -27,5 +27,5 @@ This project uses the English Wikipedia hyperlink network dataset found here: ht
 - `gen_node2vec_embeddings.py`: Uses Node2vec to create node an embedding for each node in the subgraph. Saves embeddings in `embeddings` folder. Takes parameter `n` for number of nodes in the graph. Usage: `./gen_node2vec_embeddings.py 1000`.
 - `baseline.py`: Plays 20 trials of the wiki game using BFS, then reports the shortest path length and number of visited nodes using BFS.
 - `comprehensive_eval.py`: TODO! whoever wrote this, explain what it is
-- `graph_stats.py`: TODO! whoever wrote this, explain what it is
-- `graph_train_loss.py`: TODO! Whoever wrote this, explain what it is
+- `graph_stats.py`: This is a simple script used to calculate the mean, standard deviation, and maximum for each strategy in both the 20-game and 200-game benchmark. To use this script, simply move all `.pkl` files you want to calculate the stats of into the `test_results/` directory and run `python3 graph_stats.py`. s
+- `graph_train_loss.py`: This is a simple script that creates the loss graphs across each epoch we show in the training section of our Medium post. To get each graph, run `python3 ./graph_train_loss.py <.json file>`, where you specify the path to one of the two JSON files in `checkpoint/`.
